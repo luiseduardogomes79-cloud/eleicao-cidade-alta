@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Candidatos | Cidade Alta RP</title>
+<style>
+*{box-sizing:border-box;font-family:Arial;margin:0}
+body{background:#f2f3f5;color:#222}
+header{height:60px;background:#1d1f22;color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+header b{font-size:17px}
+header a{color:#ddd;text-decoration:none;font-size:14px}
+main{max-width:900px;margin:25px auto;padding:0 15px}
+h1{font-size:25px;margin-bottom:5px}
+.sub{color:#666;font-size:14px;margin-bottom:20px}
+.box{background:#fff;border:1px solid #ddd;border-radius:7px;padding:18px;margin-bottom:18px}
+h2{font-size:17px;margin-bottom:15px}
+.form{display:grid;grid-template-columns:100px 1fr 1fr;gap:12px}
+label{font-size:12px;font-weight:bold;color:#555}
+input,select{width:100%;height:40px;border:1px solid #ccc;border-radius:5px;padding:0 10px;margin-top:6px;outline:0}
+.num input{height:92px;text-align:center;font-size:28px;font-weight:bold}
+.foto-area{grid-column:2/4;display:flex;align-items:center;gap:15px;margin-top:3px}
+.preview{width:100px;height:100px;border:1px solid #ccc;background:#eee;border-radius:5px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#888;font-size:12px;text-align:center}
+.preview img{width:100%;height:100%;object-fit:cover;display:none}
+input[type=file]{display:none}
+.foto-btn{display:inline-block;background:#e5e5e5;border:1px solid #ccc;padding:10px 14px;border-radius:5px;font-size:13px;font-weight:bold;cursor:pointer}
+.status{font-size:12px;color:#777;margin-top:7px}
+button{border:0;border-radius:5px;padding:11px 18px;font-weight:bold;cursor:pointer}
+.salvar{background:#217a40;color:white}
+.cancelar{background:#ddd;display:none}
+.botoes{display:flex;gap:8px;margin-top:17px}
+.search{margin-bottom:15px}
+.lista{display:flex;flex-direction:column;gap:8px}
+.card{border:1px solid #ddd;border-radius:6px;padding:11px;display:flex;align-items:center;gap:12px}
+.card img{width:55px;height:55px;object-fit:cover;border-radius:4px;background:#ddd}
+.card .n{font-size:19px;font-weight:bold;width:45px;text-align:center}
+.info{flex:1}
+.info b{display:block;margin-bottom:4px}
+.info span{font-size:13px;color:#666}
+.acoes{display:flex;gap:5px}
+.ed{background:#e5e5e5}
+.ex{background:#d93636;color:white}
+@media(max-width:650px){
+.form{grid-template-columns:1fr}
+.num input{height:45px}
+.foto-area{grid-column:auto;flex-direction:column;align-items:flex-start}
+.card{flex-wrap:wrap}
+.acoes{width:100%}
+.acoes button{flex:1}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<b>CIDADE ALTA RP | ADMIN</b>
+<a href="admin.html">← Voltar</a>
+</header>
+
+<main>
+
+<h1>Candidatos</h1>
+<p class="sub">Gerencie os candidatos da eleição.</p>
+
+<section class="box">
+
+<h2 id="titulo">Cadastrar candidato</h2>
+
+<div class="form">
+
+<div class="num">
+<label>NÚMERO</label>
+<input id="numero" type="number" inputmode="numeric" placeholder="15">
+</div>
+
+<div>
+<label>NOME</label>
+<input id="nome" type="text" placeholder="Nome completo">
+</div>
+
+<div>
+<label>PARTIDO</label>
+<input id="partido" type="text" placeholder="Ex.: MDB">
+</div>
+
+<div>
+<label>CARGO</label>
+<select id="cargo" onchange="limite()">
+<option value="federal">Deputado Federal</option>
+<option value="estadual">Deputado Estadual</option>
+<option value="senador">Senador</option>
+<option value="governador">Governador</option>
+<option value="presidente">Presidente</option>
+</select>
+</div>
+
+<div class="foto-area">
+
+<div class="preview">
+<span id="semFoto">Sem foto</span>
+<img id="preview">
+</div>
+
+<div>
+<label for="arquivo" class="foto-btn">📷 Selecionar foto</label>
+<input id="arquivo" type="file" accept="image/*">
+<div class="status" id="status">Nenhuma foto selecionada.</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="botoes">
+
+<button class="salvar" id="salvar" onclick="salvar()">Cadastrar</button>
+
+<button class="cancelar" id="cancelar" onclick="cancelar()">Cancelar</button>
+
+</div>
+
+</section>
+
+<section class="box">
+
+<h2>Candidatos cadastrados</h2>
+
+<input class="search" id="busca" placeholder="Pesquisar..." oninput="mostrar">
+
+<div id="lista" class="lista"></div>
+
+</section>
+
+</main>
+
+<script>
+
+const K="candidatosCidadeAlta";
+
+let dados=JSON.parse(localStorage.getItem(K)||"{}");
+let editando=null;
+let foto=null;
+
+function banco(){
+localStorage.setItem(K,JSON.stringify(dados));
+}
+
+function limite(){
+
+let c=cargo.value;
+
+let l={
+federal:4,
+estadual:5,
+senador:3,
+governador:2,
+presidente:2
+}[c];
+
+numero.placeholder="Número com "+l+" dígitos";
+
+}
+
+arquivo.onchange=function(){
+
+let f=this.files[0];
+
+if(!f)return;
+
+status.textContent="Carregando foto...";
+
+let r=new FileReader();
+
+r.onload=function(e){
+
+let img=new Image();
+
+img.onload=function(){
+
+let m=400,w=img.width,h=img.height;
+
+if(w>m||h>m){
+
+let p=Math.min(m/w,m/h);
+
+w=Math.round(w*p);
+h=Math.round(h*p);
+
+}
+
+let canvas=document.createElement("canvas");
+
+canvas.width=w;
+canvas.height=h;
+
+canvas.getContext("2d").drawImage(img,0,0,w,h);
+
+foto=canvas.toDataURL("image/jpeg",.55);
+
+preview.src=foto;
+preview.style.display="block";
+semFoto.style.display="none";
+
+status.textContent="✓ Foto carregada";
+
+};
+
+img.src=e.target.result;
+
+};
+
+r.readAsDataURL(f);
+
+};
+
+function salvar(){
+
+let n=numero.value.trim();
+let nomev=nome.value.trim();
+let part=partido.value.trim();
+let car=cargo.value;
+
+let qtd={
+federal:4,
+estadual:5,
+senador:3,
+governador:2,
+presidente:2
+}[car];
+
+if(!n||!nomev||!part){
+
+alert("Preencha todos os campos.");
+return;
+
+}
+
+if(n.length!=qtd){
+
+alert("O número para este cargo deve ter "+qtd+" dígitos.");
+return;
+
+}
+
+if(editando===null&&!foto){
+
+alert("Selecione uma foto.");
+return;
+
+}
+
+let chave=car+"_"+n;
+
+if(editando===null&&dados[chave]){
+
+alert("Este número já está cadastrado para este cargo.");
+return;
+
+}
+
+let antiga=editando!==null?dados[editando]:null;
+
+if(editando!==null&&editando!=chave){
+
+if(dados[chave]){
+
+alert("Este número já está cadastrado.");
+return;
+
+}
+
+delete dados[editando];
+
+}
+
+dados[chave]={
+
+numero:n,
+nome:nomev,
+partido:part,
+cargo:car,
+foto:foto||(antiga?antiga.foto:"")
+
+};
+
+banco();
+
+alert(editando===null?"Candidato cadastrado!":"Candidato atualizado!");
+
+cancelar();
+mostrar();
+
+}
+
+function editar(k){
+
+let c=dados[k];
+
+editando=k;
+
+numero.value=c.numero;
+nome.value=c.nome;
+partido.value=c.partido;
+cargo.value=c.cargo;
+
+foto=c.foto;
+
+preview.src=c.foto;
+preview.style.display="block";
+semFoto.style.display="none";
+
+status.textContent="Foto atual";
+
+titulo.textContent="Editar candidato";
+salvarBtn();
+
+}
+
+function salvarBtn(){
+
+document.getElementById("salvar").textContent="Salvar alterações";
+document.getElementById("cancelar").style.display="block";
+
+}
+
+function cancelar(){
+
+editando=null;
+foto=null;
+
+numero.value="";
+nome.value="";
+partido.value="";
+arquivo.value="";
+
+preview.src="";
+preview.style.display="none";
+semFoto.style.display="block";
+
+status.textContent="Nenhuma foto selecionada.";
+
+titulo.textContent="Cadastrar candidato";
+document.getElementById("salvar").textContent="Cadastrar";
+document.getElementById("cancelar").style.display="none";
+
+limite();
+
+}
+
+function excluir(k){
+
+if(!confirm("Excluir este candidato?"))return;
+
+delete dados[k];
+
+banco();
+mostrar();
+
+}
+
+function cargoNome(c){
+
+return{
+
+federal:"Deputado Federal",
+estadual:"Deputado Estadual",
+senador:"Senador",
+governador:"Governador",
+presidente:"Presidente"
+
+}[c];
+
+}
+
+function mostrar(){
+
+let q=busca.value.toLowerCase();
+
+lista.innerHTML="";
+
+Object.keys(dados).sort().forEach(k=>{
+
+let c=dados[k];
+
+let texto=(c.numero+" "+c.nome+" "+c.partido+" "+cargoNome(c.cargo)).toLowerCase();
+
+if(!texto.includes(q))return;
+
+lista.innerHTML+=`
+
+<div class="card">
+
+<img src="${c.foto}">
+
+<div class="n">${c.numero}</div>
+
+<div class="info">
+
+<b>${c.nome}</b>
+
+<span>${cargoNome(c.cargo)} • ${c.partido}</span>
+
+</div>
+
+<div class="acoes">
+
+<button class="ed" onclick="editar('${k}')">Editar</button>
+
+<button class="ex" onclick="excluir('${k}')">Excluir</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+busca.oninput=mostrar;
+
+limite();
+mostrar();
+
+</script>
+
+</body>
+</html>

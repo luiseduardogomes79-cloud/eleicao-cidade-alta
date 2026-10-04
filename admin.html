@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Administração - Cidade Alta RP</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f1f1f1;
+    font-family:Arial,sans-serif;
+    color:#222;
+}
+
+header{
+    background:#222;
+    color:#fff;
+    padding:18px;
+    text-align:center;
+}
+
+header h1{
+    margin:0;
+    font-size:23px;
+}
+
+header p{
+    margin:6px 0 0;
+    color:#bbb;
+}
+
+.container{
+    width:900px;
+    max-width:94%;
+    margin:25px auto;
+}
+
+.login{
+    width:400px;
+    max-width:100%;
+    margin:80px auto;
+    background:#fff;
+    padding:25px;
+    border-radius:8px;
+    box-shadow:0 2px 10px #ccc;
+}
+
+.login h2{
+    text-align:center;
+    margin-top:0;
+}
+
+input{
+    width:100%;
+    padding:13px;
+    margin:7px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
+    font-size:15px;
+}
+
+button{
+    border:0;
+    border-radius:5px;
+    padding:13px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.btnLogin{
+    width:100%;
+    background:#168a42;
+    color:#fff;
+    margin-top:8px;
+}
+
+.erro{
+    color:#b00000;
+    text-align:center;
+    margin-top:10px;
+    font-size:14px;
+}
+
+.painel{
+    display:none;
+}
+
+.status{
+    background:#fff;
+    padding:18px;
+    border-radius:8px;
+    box-shadow:0 2px 8px #ccc;
+    margin-bottom:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.statusTexto{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.aberta{
+    color:#168a42;
+}
+
+.encerrada{
+    color:#b00000;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.card{
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 2px 8px #ccc;
+}
+
+.card h3{
+    margin:0 0 8px;
+    color:#555;
+    font-size:15px;
+}
+
+.numero{
+    font-size:28px;
+    font-weight:bold;
+}
+
+.acoes{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-top:18px;
+}
+
+.acao{
+    background:#222;
+    color:#fff;
+}
+
+.verde{
+    background:#168a42;
+}
+
+.vermelho{
+    background:#b00000;
+}
+
+.amarelo{
+    background:#e0a900;
+    color:#111;
+}
+
+.atualizar{
+    width:100%;
+    margin-top:18px;
+    background:#168a42;
+    color:#fff;
+}
+
+.logout{
+    width:100%;
+    margin-top:12px;
+    background:#555;
+    color:#fff;
+}
+
+.reset{
+    margin-top:20px;
+    background:#fff;
+    border:1px solid #b00000;
+    color:#b00000;
+    width:100%;
+}
+
+@media(max-width:600px){
+    .grid,
+    .acoes{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>CIDADE ALTA RP</h1>
+    <p>Painel Administrativo • Eleições 2026</p>
+</header>
+
+<!-- LOGIN -->
+
+<div class="container" id="login">
+
+    <div class="login">
+
+        <h2>Área Administrativa</h2>
+
+        <input
+            type="text"
+            id="usuario"
+            placeholder="Usuário"
+        >
+
+        <input
+            type="password"
+            id="senha"
+            placeholder="Senha"
+        >
+
+        <button
+            class="btnLogin"
+            onclick="entrar()"
+        >
+            ENTRAR
+        </button>
+
+        <div class="erro" id="erro"></div>
+
+    </div>
+
+</div>
+
+
+<!-- PAINEL -->
+
+<div class="container painel" id="painel">
+
+    <div class="status">
+
+        <div>
+            <div style="font-size:13px;color:#777">
+                STATUS DA ELEIÇÃO
+            </div>
+
+            <div
+                class="statusTexto"
+                id="status"
+            >
+                —
+            </div>
+        </div>
+
+        <button
+            class="acao verde"
+            id="btnEleicao"
+            onclick="alternarEleicao()"
+        >
+            —
+        </button>
+
+    </div>
+
+
+    <div class="grid">
+
+        <div class="card">
+            <h3>VOTOS REGISTRADOS</h3>
+            <div
+                class="numero"
+                id="totalVotos"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>CANDIDATOS</h3>
+            <div
+                class="numero"
+                id="totalCandidatos"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>ELEITORES CADASTRADOS</h3>
+            <div
+                class="numero"
+                id="totalEleitores"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>VOTOS BRANCOS</h3>
+            <div
+                class="numero"
+                id="totalBrancos"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>VOTOS NULOS</h3>
+            <div
+                class="numero"
+                id="totalNulos"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>PARTICIPAÇÕES</h3>
+            <div
+                class="numero"
+                id="participacoes"
+            >
+                0
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="card" style="margin-top:18px">
+
+        <h2 style="margin-top:0">
+            Votos por cargo
+        </h2>
+
+        <div id="porCargo">
+            Carregando...
+        </div>
+
+    </div>
+
+
+    <div class="acoes">
+
+        <button
+            class="acao"
+            onclick="abrir('candidatos.html')"
+        >
+            👤 CANDIDATOS
+        </button>
+
+        <button
+            class="acao"
+            onclick="abrir('eleitores.html')"
+        >
+            👥 ELEITORES
+        </button>
+
+        <button
+            class="acao"
+            onclick="abrir('resultados.html')"
+        >
+            📊 RESULTADOS
+        </button>
+
+        <button
+            class="acao"
+            onclick="abrir('urna.html')"
+        >
+            🗳️ ABRIR URNA
+        </button>
+
+    </div>
+
+
+    <button
+        class="atualizar"
+        onclick="carregar()"
+    >
+        🔄 ATUALIZAR PAINEL
+    </button>
+
+
+    <button
+        class="reset"
+        onclick="resetarVotacao()"
+    >
+        ⚠️ RESETAR VOTAÇÃO DE TESTE
+    </button>
+
+
+    <button
+        class="logout"
+        onclick="sair()"
+    >
+        SAIR
+    </button>
+
+</div>
+
+
+<script>
+
+/* =========================
+   LOGIN
+========================= */
+
+const USUARIO="admin";
+const SENHA="CA2026";
+
+
+function entrar(){
+
+    const usuario=
+        document.getElementById("usuario").value;
+
+    const senha=
+        document.getElementById("senha").value;
+
+    if(usuario===USUARIO && senha===SENHA){
+
+        sessionStorage.setItem(
+            "cidadeAltaAdmin",
+            "true"
+        );
+
+        mostrarPainel();
+
+    }else{
+
+        document.getElementById("erro").textContent=
+        "Usuário ou senha incorretos.";
+
+    }
+}
+
+
+/* =========================
+   VERIFICAR LOGIN
+========================= */
+
+if(
+    sessionStorage.getItem("cidadeAltaAdmin")==="true"
+){
+
+    mostrarPainel();
+}
+
+
+function mostrarPainel(){
+
+    document.getElementById("login").style.display="none";
+
+    document.getElementById("painel").style.display="block";
+
+    carregar();
+}
+
+
+/* =========================
+   CARREGAR DADOS
+========================= */
+
+function carregar(){
+
+    const candidatos=
+        JSON.parse(
+            localStorage.getItem(
+                "candidatosCidadeAlta"
+            )||"{}"
+        );
+
+    const eleitores=
+        JSON.parse(
+            localStorage.getItem(
+                "eleitoresCidadeAlta"
+            )||"[]"
+        );
+
+    const votos=
+        JSON.parse(
+            localStorage.getItem(
+                "votosCidadeAlta"
+            )||"{}"
+        );
+
+
+    let totalVotos=0;
+    let totalBrancos=0;
+    let totalNulos=0;
+
+
+    const cargos=[
+        ["federal","Deputado Federal"],
+        ["estadual","Deputado Estadual"],
+        ["senador1","1º Senador"],
+        ["senador2","2º Senador"],
+        ["governador","Governador"],
+        ["presidente","Presidente"]
+    ];
+
+
+    let html="";
+
+
+    cargos.forEach(item=>{
+
+        const id=item[0];
+        const nome=item[1];
+
+        const lista=votos[id]||{};
+
+        let total=0;
+
+        Object.values(lista).forEach(valor=>{
+
+            total+=Number(valor)||0;
+
+        });
+
+
+        const branco=
+            Number(
+                votos.brancos?.[id]||0
+            );
+
+        const nulo=
+            Number(
+                votos.nulos?.[id]||0
+            );
+
+
+        totalVotos+=total;
+        totalBrancos+=branco;
+        totalNulos+=nulo;
+
+
+        html+=`
+        <div style="
+            padding:10px 0;
+            border-bottom:1px solid #eee;
+        ">
+
+            <b>${nome}</b>
+
+            <div style="
+                margin-top:5px;
+                color:#666;
+                font-size:14px;
+            ">
+
+                Válidos:
+                <b>${total}</b>
+
+                • Brancos:
+                <b>${branco}</b>
+
+                • Nulos:
+                <b>${nulo}</b>
+
+            </div>
+
+        </div>
+        `;
+
+    });
+
+
+    document.getElementById("totalVotos").textContent=
+        totalVotos;
+
+    document.getElementById("totalBrancos").textContent=
+        totalBrancos;
+
+    document.getElementById("totalNulos").textContent=
+        totalNulos;
+
+    document.getElementById("totalCandidatos").textContent=
+        Object.keys(candidatos).length;
+
+    document.getElementById("totalEleitores").textContent=
+        eleitores.length;
+
+    document.getElementById("participacoes").textContent=
+        totalVotos>0
+        ? Math.max(
+            ...cargos.map(item=>{
+                const lista=votos[item[0]]||{};
+                return Object.values(lista)
+                    .reduce((a,b)=>a+Number(b||0),0);
+            })
+        )
+        : 0;
+
+    document.getElementById("porCargo").innerHTML=
+        html;
+
+
+    atualizarStatus();
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function atualizarStatus(){
+
+    const status=
+        localStorage.getItem(
+            "cidadeAltaEleicaoStatus"
+        );
+
+    const texto=
+        document.getElementById("status");
+
+    const botao=
+        document.getElementById("btnEleicao");
+
+
+    if(status==="encerrada"){
+
+        texto.textContent="🔴 ENCERRADA";
+        texto.className="statusTexto encerrada";
+
+        botao.textContent=
+            "ABRIR ELEIÇÃO";
+
+        botao.className=
+            "acao verde";
+
+    }else{
+
+        texto.textContent="🟢 ABERTA";
+        texto.className="statusTexto aberta";
+
+        botao.textContent=
+            "ENCERRAR ELEIÇÃO";
+
+        botao.className=
+            "acao vermelho";
+    }
+}
+
+
+/* =========================
+   ABRIR / ENCERRAR
+========================= */
+
+function alternarEleicao(){
+
+    const atual=
+        localStorage.getItem(
+            "cidadeAltaEleicaoStatus"
+        );
+
+
+    if(atual==="encerrada"){
+
+        const confirmar=
+            confirm(
+                "Deseja realmente abrir a eleição novamente?"
+            );
+
+        if(!confirmar) return;
+
+        localStorage.setItem(
+            "cidadeAltaEleicaoStatus",
+            "aberta"
+        );
+
+    }else{
+
+        const confirmar=
+            confirm(
+                "Deseja encerrar a eleição?"
+            );
+
+        if(!confirmar) return;
+
+        localStorage.setItem(
+            "cidadeAltaEleicaoStatus",
+            "encerrada"
+        );
+    }
+
+
+    carregar();
+}
+
+
+/* =========================
+   RESET DE TESTE
+========================= */
+
+function resetarVotacao(){
+
+    const confirmar=
+        confirm(
+            "ATENÇÃO!\n\n" +
+            "Isso apagará TODOS os votos registrados " +
+            "e permitirá votar novamente neste dispositivo.\n\n" +
+            "Os candidatos e eleitores NÃO serão apagados.\n\n" +
+            "Continuar?"
+        );
+
+
+    if(!confirmar) return;
+
+
+    localStorage.removeItem(
+        "votosCidadeAlta"
+    );
+
+    localStorage.removeItem(
+        "cidadeAltaJaVotou2026"
+    );
+
+
+    alert(
+        "Votação de teste resetada com sucesso."
+    );
+
+
+    carregar();
+}
+
+
+/* =========================
+   NAVEGAÇÃO
+========================= */
+
+function abrir(pagina){
+
+    window.location.href=pagina;
+
+}
+
+
+/* =========================
+   SAIR
+========================= */
+
+function sair(){
+
+    sessionStorage.removeItem(
+        "cidadeAltaAdmin"
+    );
+
+    window.location.href="index.html";
+
+}
+
+</script>
+
+</body>
+</html>

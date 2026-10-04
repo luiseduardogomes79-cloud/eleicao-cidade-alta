@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Resultados - Cidade Alta RP</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f1f1f1;
+    font-family:Arial,sans-serif;
+    color:#222;
+}
+
+header{
+    background:#222;
+    color:#fff;
+    padding:18px;
+    text-align:center;
+}
+
+header h1{
+    margin:0;
+    font-size:23px;
+}
+
+header p{
+    margin:6px 0 0;
+    color:#bbb;
+}
+
+.container{
+    width:900px;
+    max-width:94%;
+    margin:25px auto;
+}
+
+.cargo{
+    background:#fff;
+    border-radius:8px;
+    padding:20px;
+    margin-bottom:18px;
+    box-shadow:0 2px 8px #ccc;
+}
+
+.cargo h2{
+    margin:0 0 15px;
+    border-bottom:1px solid #ddd;
+    padding-bottom:10px;
+}
+
+.candidato{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+}
+
+.posicao{
+    width:35px;
+    font-size:18px;
+    font-weight:bold;
+    text-align:center;
+}
+
+.foto{
+    width:55px;
+    height:65px;
+    object-fit:cover;
+    border-radius:4px;
+    border:1px solid #ccc;
+}
+
+.dados{
+    flex:1;
+}
+
+.nome{
+    font-weight:bold;
+    font-size:16px;
+}
+
+.partido{
+    color:#777;
+    font-size:13px;
+    margin-top:3px;
+}
+
+.votos{
+    text-align:right;
+    min-width:120px;
+}
+
+.numeroVotos{
+    font-weight:bold;
+    font-size:17px;
+}
+
+.percentual{
+    font-size:13px;
+    color:#777;
+}
+
+.barra{
+    height:7px;
+    background:#ddd;
+    border-radius:5px;
+    margin-top:6px;
+    overflow:hidden;
+}
+
+.barra div{
+    height:100%;
+    background:#168a42;
+}
+
+.eleito{
+    background:#168a42;
+    color:#fff;
+    padding:3px 7px;
+    border-radius:4px;
+    font-size:11px;
+    margin-left:5px;
+}
+
+.info{
+    margin-top:15px;
+    padding-top:12px;
+    border-top:1px solid #ddd;
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    font-size:14px;
+}
+
+.info span{
+    color:#555;
+}
+
+.vazio{
+    color:#777;
+    padding:10px 0;
+}
+
+.atualizar{
+    width:100%;
+    background:#168a42;
+    color:#fff;
+    border:0;
+    padding:14px;
+    border-radius:6px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-bottom:20px;
+}
+
+.total{
+    background:#fff;
+    padding:18px;
+    border-radius:8px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px #ccc;
+}
+
+.total h2{
+    margin-top:0;
+}
+
+.resumo{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.box{
+    background:#eee;
+    padding:14px;
+    border-radius:5px;
+    text-align:center;
+}
+
+.box strong{
+    display:block;
+    font-size:20px;
+}
+
+@media(max-width:600px){
+    .candidato{
+        flex-wrap:wrap;
+    }
+
+    .votos{
+        width:100%;
+        text-align:left;
+        padding-left:47px;
+    }
+
+    .resumo{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>CIDADE ALTA RP</h1>
+    <p>Apuração das Eleições 2026</p>
+</header>
+
+<div class="container">
+
+<button class="atualizar" onclick="carregar()">
+    🔄 ATUALIZAR APURAÇÃO
+</button>
+
+<div class="total">
+    <h2>Resumo Geral</h2>
+
+    <div class="resumo">
+        <div class="box">
+            <strong id="totalVotos">0</strong>
+            Votos registrados
+        </div>
+
+        <div class="box">
+            <strong id="totalBrancos">0</strong>
+            Votos brancos
+        </div>
+
+        <div class="box">
+            <strong id="totalNulos">0</strong>
+            Votos nulos
+        </div>
+    </div>
+</div>
+
+<div id="resultados"></div>
+
+</div>
+
+<script>
+
+const cargos=[
+    {
+        id:"federal",
+        titulo:"DEPUTADO FEDERAL"
+    },
+    {
+        id:"estadual",
+        titulo:"DEPUTADO ESTADUAL"
+    },
+    {
+        id:"senador1",
+        titulo:"1º SENADOR"
+    },
+    {
+        id:"senador2",
+        titulo:"2º SENADOR"
+    },
+    {
+        id:"governador",
+        titulo:"GOVERNADOR"
+    },
+    {
+        id:"presidente",
+        titulo:"PRESIDENTE"
+    }
+];
+
+function carregar(){
+
+    const candidatos=
+        JSON.parse(
+            localStorage.getItem("candidatosCidadeAlta")||"{}"
+        );
+
+    const votos=
+        JSON.parse(
+            localStorage.getItem("votosCidadeAlta")||"{}"
+        );
+
+    let html="";
+
+    let totalGeral=0;
+    let brancosGeral=0;
+    let nulosGeral=0;
+
+    cargos.forEach(cargo=>{
+
+        let mapa={};
+
+        if(cargo.id==="senador1" || cargo.id==="senador2"){
+
+            const lista=votos[cargo.id]||{};
+
+            Object.keys(lista).forEach(numero=>{
+                mapa[numero]=lista[numero];
+            });
+
+        }else{
+
+            mapa=votos[cargo.id]||{};
+
+        }
+
+        let lista=Object.keys(mapa).map(numero=>{
+
+            let chave=cargo.id;
+
+            if(cargo.id==="senador1" || cargo.id==="senador2"){
+                chave="senador";
+            }
+
+            const candidato=
+                candidatos[chave+"_"+numero];
+
+            return {
+                numero:numero,
+                votos:Number(mapa[numero]||0),
+                candidato:candidato
+            };
+
+        });
+
+        lista.sort((a,b)=>b.votos-a.votos);
+
+        let totalCargo=0;
+
+        lista.forEach(item=>{
+            totalCargo+=item.votos;
+        });
+
+        const brancos=
+            Number(
+                votos.brancos?.[cargo.id]||0
+            );
+
+        const nulos=
+            Number(
+                votos.nulos?.[cargo.id]||0
+            );
+
+        totalGeral+=totalCargo;
+        brancosGeral+=brancos;
+        nulosGeral+=nulos;
+
+        const totalContabilizado=
+            totalCargo+brancos+nulos;
+
+        html+=`
+        <div class="cargo">
+
+            <h2>${cargo.titulo}</h2>
+        `;
+
+        if(lista.length===0){
+
+            html+=`
+            <div class="vazio">
+                Nenhum voto registrado.
+            </div>
+            `;
+
+        }else{
+
+            lista.forEach((item,index)=>{
+
+                const percentual=
+                    totalCargo>0
+                    ?((item.votos/totalCargo)*100).toFixed(1)
+                    :0;
+
+                const largura=
+                    totalCargo>0
+                    ?((item.votos/totalCargo)*100)
+                    :0;
+
+                const eleito=
+                    index===0 && item.votos>0;
+
+                const nome=
+                    item.candidato?.nome||
+                    "Candidato não cadastrado";
+
+                const partido=
+                    item.candidato?.partido||
+                    "—";
+
+                const foto=
+                    item.candidato?.foto
+                    ?`<img class="foto" src="${item.candidato.foto}">`
+                    :`<div class="foto"></div>`;
+
+                html+=`
+                <div class="candidato">
+
+                    <div class="posicao">
+                        ${index+1}º
+                    </div>
+
+                    ${foto}
+
+                    <div class="dados">
+
+                        <div class="nome">
+                            ${nome}
+
+                            ${
+                                eleito
+                                ?'<span class="eleito">MAIS VOTADO</span>'
+                                :''
+                            }
+
+                        </div>
+
+                        <div class="partido">
+                            Nº ${item.numero} • ${partido}
+                        </div>
+
+                        <div class="barra">
+                            <div style="width:${largura}%"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="votos">
+
+                        <div class="numeroVotos">
+                            ${item.votos} voto${item.votos===1?"":"s"}
+                        </div>
+
+                        <div class="percentual">
+                            ${percentual}%
+                        </div>
+
+                    </div>
+
+                </div>
+                `;
+
+            });
+
+        }
+
+        html+=`
+
+            <div class="info">
+
+                <span>
+                    Válidos: <b>${totalCargo}</b>
+                </span>
+
+                <span>
+                    Brancos: <b>${brancos}</b>
+                </span>
+
+                <span>
+                    Nulos: <b>${nulos}</b>
+                </span>
+
+                <span>
+                    Total: <b>${totalContabilizado}</b>
+                </span>
+
+            </div>
+
+        </div>
+        `;
+
+    });
+
+    document.getElementById("resultados").innerHTML=html;
+
+    document.getElementById("totalVotos").textContent=
+        totalGeral;
+
+    document.getElementById("totalBrancos").textContent=
+        brancosGeral;
+
+    document.getElementById("totalNulos").textContent=
+        nulosGeral;
+}
+
+carregar();
+
+</script>
+
+</body>
+</html>
